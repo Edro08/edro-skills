@@ -16,4 +16,4 @@ Agents use `agents/context/` to maintain living project context and verification
 ## Repository Standards
 
 - **Relative paths only**: All documentation links, scripts, and configs must remain path-agnostic from the repository root backwards.
-- **Explicit Git consent**: Never run `git commit` or `git push` autonomously; follow `"<active-branch>: <imperative description>"` when the user requests a commit.
+- **Explicit Git consent**: Never run `git commit` or `git push` autonomously; follow the active Git skill (e.g., `edro-git`) or repository commit conventions when the user requests a commit.

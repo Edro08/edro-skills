@@ -71,9 +71,9 @@ Define/invoke clean role subagents on demand (`define_subagent` with `EnableWrit
 
 ## Step 0: Git Preflight & Project Onboarding (`Gate 0`)
 
-1. **Git Preflight** ([ref/git.md](ref/git.md)):
+1. **Branch Safety Preflight**:
    - Run `git rev-parse --is-inside-work-tree`, `git branch --show-current`, and `git status --short`.
-   - **HARD GATE**: If on `main` or `master` and files will be modified, **STOP** and ask the user to create/switch to a dedicated branch (`feat/<slug>`, `fix/<slug>`, `TASK-<id>`).
+   - **HARD GATE**: If on `main` or `master` and files will be modified, **STOP** and ask the user to create/switch to a dedicated branch (or follow the active Git skill such as `edro-git`).
 2. **Context Onboarding** ([ref/agents.md](ref/agents.md)):
    - Check for root `AGENTS.md` and `agents/` (`specs/`, `context/`).
    - If missing, **STOP** and ask verbatim:
@@ -163,13 +163,10 @@ Initialize `retry_count = 0`. Both **5A (QA)** and **5B (Security)** share this 
    - Prepend the completed milestone to `agents/context/history.md` (reverse chronological order, relative links, verified commands).
    - Mark completed phases `🟢` in `agents/context/fases.md`.
 2. **Final Portability Check**: Confirm `audit-paths` exits with `0` after final doc/context edits.
-3. **User UAT & Git Readiness (`HARD STOP`)**:
+3. **User UAT & Git Handoff (`HARD STOP`)**:
    - Present the finished work for user review/UAT, including unit test + `audit-paths` results (and summaries of `qa-report.md` `PASS` and `security-report.md` `PASS` when running in **SDLC Mode**).
-   - Run `git branch --show-current` and `git status --short`, and propose the commit message:
-     ```text
-     "<active-branch>: <concise imperative description>"
-     ```
-   - **NEVER** run `git commit` or `git push` autonomously; wait for explicit user approval.
+   - Run `git branch --show-current` and `git status --short` to summarize the ready working tree.
+   - **NEVER** run `git commit` or `git push` autonomously; stop here and defer commit formatting and execution to the active Git skill (e.g., `edro-git`) or the user's explicit instructions.
 
 ---
 
@@ -179,7 +176,6 @@ Initialize `retry_count = 0`. Both **5A (QA)** and **5B (Security)** share this 
 | :--- | :--- | :--- |
 | **Role Prompts** | [`roles/`](roles/) | `product.md`, `design.md`, `tech-lead.md`, `dev.md`, `qa.md`, `security.md` |
 | **Context Protocol** | [ref/agents.md](ref/agents.md) | Onboarding gate, artifact contracts, `history.md` formatting |
-| **Git Conventions** | [ref/git.md](ref/git.md) | Branch safety, commit format, explicit consent rule |
 | **Portability Rules** | [ref/portability.md](ref/portability.md) | Path-agnostic rules and audit remediation |
 | **Templates** | [`resources/`](resources/) | `AGENTS.template.md`, `prd.md`, `design.md`, `architecture.md`, `history.md`, `fases.md`, `qa-report.md`, `security-report.md` |
 | **Audit Scripts** | [scripts/audit-paths.ps1](scripts/audit-paths.ps1), [scripts/audit-paths.sh](scripts/audit-paths.sh) | Automated host-path scanners |
