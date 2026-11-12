@@ -17,18 +17,16 @@ This skill supports **two execution modes**. Pick the lightest mode that fits th
 
 | Mode | When to Use | How It Executes |
 | :--- | :--- | :--- |
-| **Lite Mode** *(Modular Router)* | Small bugfixes, minor refactors, standalone code reviews, targeted QA/Security runs, repo onboarding, or tasks not needing PRD/mockups | **Step 0 (`Gate 0`) is always mandatory**. From Step 0, jump to the requested step (**`Step 4` Dev**, **`Step 5` Code Review**, **`Step 6` QA**, or **`Step 7` Security**). Whenever **`Step 4` (Dev)** runs, **`Gate 3` (Tech Lead Consultant)** is mandatory before closing or triggering Steps `5`/`6`/`7` on demand, finishing at **`Step 8`**. |
+| **Lite Mode** *(Modular Router)* | Small bugfixes, minor refactors, standalone code reviews, targeted QA/Security runs, repo onboarding, or tasks not needing PRD/mockups | **Step 0 (`Gate 0`) is always mandatory**. From Step 0, jump to **`Step 4` (Dev)**, **`Step 5` (Code Review)**, **`Step 6` (QA)**, or **`Step 7` (Security)**. **Whichever step (`4`, `5`, `6`, or `7`) runs in Lite Mode triggers `Gate 3` (Tech Lead Consultant) on completion (`PASS` or `FAIL`)**—never auto-remediating without your direction—until you approve moving to **`Step 8`**. |
 | **SDLC Mode** *(Multi-Role)* | New features, product/UI/API/CLI design, substantial architecture changes, or explicit full-cycle `/edro-sdlc` requests | Act as the **Orchestrator** coordinating clean role subagents (Option A) via `agents/` handoff contracts from **`Step 0` → `Step 8`**. Never merge `dev` with `qa` or `security`. |
 
 ```text
 [Lite Mode]:  [0. Git & Onboarding (Mandatory)]
-                 ├──▶ [4. Dev + Tests + audit-paths] ─▶ ✋ GATE 3 (Tech Lead Consultant — Mandatory):
-                 │       ├── Request changes to Dev (N rounds, logged in code-review.md) ──▶ [4. Dev]
-                 │       ├── Trigger on demand ──▶ [5. Full Review] / [6. QA] / [7. Security] ──▶ [8. Closure & Git]
-                 │       └── Approve ("todo bien") ──▶ consolidate architecture.md + fases.md ──▶ [8. Closure & Git]
-                 ├──▶ [5. Code Review direct (hand-written code review)] ──▶ ✋ GATE 3 ──▶ [8. Closure & Git]
-                 ├──▶ [6. QA direct] ──▶ ✋ GATE 4 (Opt-in Security?) ──▶ [8. Closure & Git]
-                 └──▶ [7. Security direct] ──▶ [8. Closure & Git]
+                 ├──▶ [4. Dev + Tests + audit-paths] ──┐
+                 ├──▶ [5. Code Review direct] ─────────┼──▶ ✋ GATE 3 (Tech Lead Consultant — Always triggered):
+                 ├──▶ [6. QA direct] ──────────────────┤       ├── Request changes / remediation ──▶ [4. Dev] / loop
+                 └──▶ [7. Security direct] ────────────┘       ├── Trigger another step ──▶ [5] / [6] / [7]
+                                                               └── Approve ("todo bien") ──▶ [8. Closure & Git]
 
 [SDLC Mode]:  [0. Git & Onboarding] ─▶ [1. Product (prd.md)] ─▶ [2. Design (specs/*)] ─▶ ✋ GATE 1: User approves mockups
                                                                                                       │
@@ -64,9 +62,9 @@ This skill supports **two execution modes**. Pick the lightest mode that fits th
 | Intent / Invocation | Mode & Path |
 | :--- | :--- |
 | Quick bugfix, minor refactor, or small feature not needing PRD/mockups | **Lite Mode**: **Step 0** → **Step 4** ([roles/dev.md](roles/dev.md) + `Step 4.4`) → **`Gate 3`** (request changes, trigger `5`/`6`/`7`, or approve) → **Step 8** |
-| Review hand-written or uncommitted code (`Code Review` only) | **Lite Mode**: **Step 0** → **Step 5** (`tech-lead` writes `code-review.md` + **`Gate 3`**) → **Step 8** |
-| Test / verify existing features or changes (`QA` only) | **Lite Mode**: **Step 0** → **Step 6** (`qa` writes `qa-report.md`) → **`Gate 4`** (Opt-in Security) → **Step 8** |
-| Audit vulnerabilities, hardening, or portability (`Security` only) | **Lite Mode**: **Step 0** → **Step 7** (`security` writes `security-report.md`) → **Step 8** |
+| Review hand-written or uncommitted code (`Code Review` only) | **Lite Mode**: **Step 0** → **Step 5** (`tech-lead` writes `code-review.md`) → **`Gate 3`** (**Tech Lead Consultant** decides next step) → **Step 8** |
+| Test / verify existing features or changes (`QA` only) | **Lite Mode**: **Step 0** → **Step 6** (`qa` writes `qa-report.md`) → **`Gate 3`** (**Tech Lead Consultant** decides remediation, `Step 7`, or close) → **Step 8** |
+| Audit vulnerabilities, hardening, or portability (`Security` only) | **Lite Mode**: **Step 0** → **Step 7** (`security` writes `security-report.md`) → **`Gate 3`** (**Tech Lead Consultant** decides remediation or close) → **Step 8** |
 | Close an already-reviewed task (`audit-paths`, `history.md`, `fases.md`, Git) | **Lite Mode**: **Step 4.4 → Step 8** |
 | New feature / product idea / UI, API, or CLI design | **SDLC Mode**: **Step 0 → Step 8** (full pipeline) |
 | Architecture or dev implementation with specs already approved | **SDLC Mode**: **Step 0 → Step 3 → Step 8** |
@@ -162,7 +160,8 @@ Initialize `review_retry_count = 0`. Working notes, review findings, and consult
 
 1. **5.1 Autonomous Review Loop (`tech-lead ⇄ dev`, `review_retry_count <= 2`)**:
    - The Orchestrator invokes `tech-lead` to review `dev`'s diff against `architecture.md`, `prd.md`, `design.md`, `fases.md` (when present), and stack standards (e.g., `edro-dev-*`), recording findings in `agents/context/code-review.md`.
-   - If issues are found:
+   - **If entered directly in Lite Mode (`Step 0 → Step 5`)**: do **not** run autonomous `dev` edits—proceed straight to **`Gate 3` (`5.2`)** with `code-review.md`.
+   - **In SDLC Mode**: if issues are found:
      - Increment `review_retry_count`.
      - If `review_retry_count <= 2`: `tech-lead` returns concrete fix instructions → `dev` applies fixes and re-runs `Step 4.4` → `tech-lead` re-reviews.
      - If `review_retry_count > 2` (autonomous retries exhausted): **STOP** the autonomous loop and immediately enter **`Gate 3`**, explaining to the human **Tech Lead Consultant** what happened and where `dev`/`tech-lead` got stuck so the user can guide the solution.
@@ -192,11 +191,13 @@ Initialize `qa_retry_count = 0`.
 1. **Execute Fresh QA (`qa` subagent)**:
    - Run real integration and end-to-end checks against `prd.md` and `design.md` (or against codebase contracts and user test goals in Lite Mode); write `agents/context/qa-report.md`.
 2. **Evaluate Verdict**:
-   - If `STATUS: PASS`: proceed to **Step 7 (`Gate 4`: Security Opt-in)**.
-   - If `STATUS: FAIL`:
-     - Increment `qa_retry_count`.
-     - **HARD ESCALATION GATE**: If `qa_retry_count > 2`, **STOP the autonomous loop** and escalate to the user with `qa-report.md` for guidance. (If the user provides direction, reset `qa_retry_count = 0` and resume).
-     - Otherwise (`qa_retry_count <= 2`): Orchestrator invokes `tech-lead` to triage defects → invokes `dev` to apply fixes → re-run **Step 6 (`qa`, fresh subagent)**.
+   - **If entered directly in Lite Mode (`Step 0 → Step 6`)**: regardless of `PASS` or `FAIL`, **STOP** before editing code and report `qa-report.md` to the **Tech Lead Consultant (`Gate 3`)**, who decides whether to trigger remediation (`tech-lead → dev → Step 4.4 → Step 6`), run **Step 7 (`Security`)**, or approve moving to **Step 8**.
+   - **In SDLC Mode (or when triggered from `Gate 3` after `Step 4`)**:
+     - If `STATUS: PASS`: proceed to **Step 7 (`Gate 4`: Security Opt-in)**.
+     - If `STATUS: FAIL`:
+       - Increment `qa_retry_count`.
+       - **HARD ESCALATION GATE**: If `qa_retry_count > 2`, **STOP the autonomous loop** and escalate to the **Tech Lead Consultant** with `qa-report.md` for guidance. (If direction is provided, reset `qa_retry_count = 0` and resume).
+       - Otherwise (`qa_retry_count <= 2`): Orchestrator invokes `tech-lead` to triage defects → invokes `dev` to apply fixes → re-run **Step 6 (`qa`, fresh subagent)**.
 
 ---
 
@@ -210,11 +211,13 @@ Initialize `qa_retry_count = 0`.
    - Initialize `security_retry_count = 0`.
    - Run automated vulnerability/hardening/portability checks and manual security review against `prd.md`, `design.md`, and `architecture.md`; write `agents/context/security-report.md`.
 3. **Evaluate Verdict**:
-   - If `STATUS: PASS`: proceed to **Step 8**.
-   - If `STATUS: FAIL`:
-     - Increment `security_retry_count`.
-     - **HARD ESCALATION GATE**: If `security_retry_count > 2`, **STOP the autonomous loop** and escalate to the user with `security-report.md` for guidance. (If the user provides direction, reset `security_retry_count = 0` and resume).
-     - Otherwise (`security_retry_count <= 2`): Orchestrator invokes `tech-lead` to triage security findings → invokes `dev` to apply fixes and re-run `Step 4.4` → re-run **Step 6 (`qa`)** *(when Step 6 ran in this flow)* → re-run **Step 7 (`security`)**.
+   - **If entered directly in Lite Mode (`Step 0 → Step 7`)**: regardless of `PASS` or `FAIL`, **STOP** before editing code and report `security-report.md` to the **Tech Lead Consultant (`Gate 3`)**, who decides whether to trigger remediation (`tech-lead → dev → Step 4.4` + optional `Step 6` QA → `Step 7` re-audit) or approve moving to **Step 8**.
+   - **In SDLC Mode (or when triggered from `Gate 3` after `Step 4`)**:
+     - If `STATUS: PASS`: proceed to **Step 8**.
+     - If `STATUS: FAIL`:
+       - Increment `security_retry_count`.
+       - **HARD ESCALATION GATE**: If `security_retry_count > 2`, **STOP the autonomous loop** and escalate to the **Tech Lead Consultant** with `security-report.md` for guidance. (If direction is provided, reset `security_retry_count = 0` and resume).
+       - Otherwise (`security_retry_count <= 2`): Orchestrator invokes `tech-lead` to triage security findings → invokes `dev` to apply fixes and re-run `Step 4.4` → re-run **Step 6 (`qa`)** *(when Step 6 ran in this flow)* → re-run **Step 7 (`security`)**.
 
 ---
 

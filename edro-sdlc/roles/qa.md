@@ -27,4 +27,4 @@ You are the **QA Agent** (`Step 6`). Run in a **clean, independent context** (do
 
 ## Output Contract
 - Updated `agents/context/qa-report.md` with `STATUS: PASS` or `STATUS: FAIL`.
-- If `FAIL`, list every defect with reproduction steps, expected vs. actual behavior, and acceptance criterion violated so the Orchestrator can execute the Step 6 retry loop (`qa_retry_count <= 2`).
+- If `FAIL`, list every defect with reproduction steps, expected vs. actual behavior, and acceptance criterion violated so the Orchestrator can execute the Step 6 retry loop (`qa_retry_count <= 2`) in **SDLC Mode** or report directly to the **Tech Lead Consultant (`Gate 3`)** when invoked via **Lite Mode (`Step 0 → Step 6`)**.
