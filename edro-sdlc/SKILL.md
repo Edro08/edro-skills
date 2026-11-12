@@ -161,7 +161,7 @@ Define/invoke clean role subagents on demand (`define_subagent` with `EnableWrit
 Initialize `review_retry_count = 0`. Working notes, review findings, and consultant iterations are tracked in `agents/context/code-review.md` ([resources/code-review.md](resources/code-review.md)).
 
 1. **5.1 Autonomous Review Loop (`tech-lead ⇄ dev`, `review_retry_count <= 2`)**:
-   - The Orchestrator invokes `tech-lead` to review `dev`'s diff against `architecture.md`, `prd.md`, `design.md`, `fases.md`, and stack standards (e.g., `edro-dev-*`), recording findings in `agents/context/code-review.md`.
+   - The Orchestrator invokes `tech-lead` to review `dev`'s diff against `architecture.md`, `prd.md`, `design.md`, `fases.md` (when present), and stack standards (e.g., `edro-dev-*`), recording findings in `agents/context/code-review.md`.
    - If issues are found:
      - Increment `review_retry_count`.
      - If `review_retry_count <= 2`: `tech-lead` returns concrete fix instructions → `dev` applies fixes and re-runs `Step 4.4` → `tech-lead` re-reviews.
@@ -214,7 +214,7 @@ Initialize `qa_retry_count = 0`.
    - If `STATUS: FAIL`:
      - Increment `security_retry_count`.
      - **HARD ESCALATION GATE**: If `security_retry_count > 2`, **STOP the autonomous loop** and escalate to the user with `security-report.md` for guidance. (If the user provides direction, reset `security_retry_count = 0` and resume).
-     - Otherwise (`security_retry_count <= 2`): Orchestrator invokes `tech-lead` to triage security findings → invokes `dev` to apply fixes → re-run **Step 6 (`qa`)** to confirm no regressions → re-run **Step 7 (`security`)**.
+     - Otherwise (`security_retry_count <= 2`): Orchestrator invokes `tech-lead` to triage security findings → invokes `dev` to apply fixes and re-run `Step 4.4` → re-run **Step 6 (`qa`)** *(when Step 6 ran in this flow)* → re-run **Step 7 (`security`)**.
 
 ---
 
