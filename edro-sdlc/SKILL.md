@@ -32,7 +32,7 @@ This skill supports **two execution modes**. Pick the lightest mode that fits th
                                                                                                       │
                  ┌────────────────────────────────────────────────────────────────────────────────────┘
                  ▼
-              [3. Tech Lead / Architect] ─▶ ✋ GATE 2 (if substantial) ─▶ [4. Dev (implements + tests + audit-paths)]
+              [3. Tech Lead / Architect] ─▶ ✋ GATE 2 (Tech Lead Consultant, if substantial) ─▶ [4. Dev (implements + tests + audit-paths)]
                                                                                                       │
                  ┌────────────────────────────────────────────────────────────────────────────────────┘
                  ▼
@@ -47,7 +47,7 @@ This skill supports **two execution modes**. Pick the lightest mode that fits th
                  └─ PASS
                      │
                      ▼
-              ✋ GATE 4 (Security Opt-in): Ask user whether to run Step 7 (Security) or skip to Step 8
+              ✋ GATE 4 (Security Opt-in): Ask Tech Lead Consultant whether to run Step 7 (Security) or skip to Step 8
                  ├─ Run Security ──▶ [7. Security Audit (security-report.md, security_retry_count <= 2)]
                  │                      ├─ FAIL (<= 2) ──▶ [tech-lead → dev fix → 6. QA → 7. Security]
                  │                      └─ PASS ──▶ [8. UAT & Git Consent]
@@ -129,7 +129,7 @@ Define/invoke clean role subagents on demand (`define_subagent` with `EnableWrit
 
 1. Invoke the merged `tech-lead` subagent (Tech Lead + Architect) with `prd.md` and `design.md`.
 2. Update `agents/specs/architecture.md` and break work into phases in `agents/context/fases.md`.
-3. **GATE 2**: For substantial features or architectural shifts, the Orchestrator presents the architecture and phase plan to the user for quick alignment before coding.
+3. **GATE 2 (Tech Lead Consultant)**: For substantial features or architectural shifts, the Orchestrator presents `architecture.md` and `fases.md` to the **Tech Lead Consultant** for alignment before coding.
 
 ---
 
@@ -203,10 +203,10 @@ Initialize `qa_retry_count = 0`.
 
 ## Step 7: Security Audit (`Gate 4 Opt-in` + `security`, `Max Retries = 2`)
 
-1. **✋ GATE 4: Security Opt-in Prompt** *(skipped only if the user already explicitly requested Step 7)*:
-   - After **Step 6 (QA)** reports `STATUS: PASS`, **STOP** and ask the user whether Security should run:
+1. **✋ GATE 4: Security Opt-in Prompt** *(skipped only if already explicitly requested Step 7)*:
+   - After **Step 6 (QA)** reports `STATUS: PASS`, **STOP** and ask the **Tech Lead Consultant** whether Security should run:
      > *"QA ha finalizado con `STATUS: PASS`. ¿Deseas que ejecute la auditoría de Seguridad (`Step 7: security`) o pasamos directo al cierre y entrega (`Step 8`)?"*
-   - **If the user declines / skips**: proceed directly to **Step 8**.
+   - **If declined / skipped**: proceed directly to **Step 8**.
 2. **Execute Fresh Security Audit (`security` subagent, when opted in)**:
    - Initialize `security_retry_count = 0`.
    - Run automated vulnerability/hardening/portability checks and manual security review against `prd.md`, `design.md`, and `architecture.md`; write `agents/context/security-report.md`.
