@@ -10,8 +10,9 @@ Read the applicable specifications in `agents/specs/` (when present) before modi
 Agents use `agents/context/` to maintain living project context and verification gates across sessions:
 - [`agents/context/history.md`](agents/context/history.md): chronicle of project milestones, phases, and snapshots in reverse chronological order (most recent first).
 - [`agents/context/fases.md`](agents/context/fases.md): implementation phases, roadmaps, and step-by-step checklists.
-- `agents/context/qa-report.md`: integration and E2E verification report (`STATUS: PASS | FAIL`) *(created in QA step)*.
-- `agents/context/security-report.md`: security hardening and vulnerability audit report (`STATUS: PASS | FAIL`) *(created in Security step)*.
+- `agents/context/code-review.md`: code & architecture review log and `Gate 3` consultant iterations (`STATUS: PASS | FAIL`) *(created/updated in Step 5)*.
+- `agents/context/qa-report.md`: integration and E2E verification report (`STATUS: PASS | FAIL`) *(created in Step 6: QA)*.
+- `agents/context/security-report.md`: security hardening and vulnerability audit report (`STATUS: PASS | FAIL`) *(created in Step 7: Security, when opted in)*.
 
 ## Repository Standards
 
