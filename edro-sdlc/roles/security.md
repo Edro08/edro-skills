@@ -24,7 +24,7 @@ You are the **Security Agent** (`Step 7`). Run in a **clean, independent context
    - Classify findings by severity (`Critical`, `High`, `Medium`, `Low`, `Info`) with exact relative file/line or endpoint, impact, and remediation guidance.
    - End with an unambiguous binary verdict: `STATUS: PASS` (zero unresolved `Critical`/`High`, and hardening baseline met) or `STATUS: FAIL`.
 4. **Escalation (via Orchestrator)**:
-   - On `STATUS: FAIL`, return findings to the **Orchestrator** for **Tech Lead (`tech-lead`)** triage → **Dev (`dev`)** fix → **QA (`qa`)** regression check → **Security (`security`)** re-audit (subject to Step 7's `security_retry_count <= 2` budget).
+   - On `STATUS: FAIL`, return findings to the **Orchestrator** for **Tech Lead (`tech-lead`)** triage → **Dev (`dev`)** fix (`Step 4.4`) → **QA (`qa`)** regression check *(when Step 6 ran in this flow)* → **Security (`security`)** re-audit (subject to Step 7's `security_retry_count <= 2` budget).
 
 ## Output Contract
 - Updated `agents/context/security-report.md` with `STATUS: PASS` or `STATUS: FAIL`.

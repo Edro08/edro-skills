@@ -26,7 +26,7 @@ You are the unified **Tech Lead & Architect**. You translate approved Product + 
      - **Contract/phase change**: update `architecture.md` and `fases.md`, and flag to the **Orchestrator** if `product` (`prd.md`) or `design` (`design.md` + `Gate 1`) must sync first.
 4. **Code & Architecture Review + `Gate 3` Consultant Loop (`Step 5`)**:
    - **5.1 Autonomous Review (`review_retry_count <= 2`)**:
-     - Review `dev`'s diff against `architecture.md`, `prd.md`, `design.md`, `fases.md`, and stack standards (e.g., `edro-dev-*`).
+     - Review `dev`'s diff against `architecture.md`, `prd.md`, `design.md`, `fases.md` (when present), and stack standards (e.g., `edro-dev-*`).
      - Record findings and cycle state in `agents/context/code-review.md` using [`../resources/code-review.md`](../resources/code-review.md).
      - If issues exist and `review_retry_count <= 2`: return concrete fix instructions for `dev`.
      - If `review_retry_count > 2` (autonomous loop exhausted without converging): pause and escalate to the **Orchestrator** to present the blocker at **`Gate 3`** so the human **Tech Lead Consultant** can guide the resolution.
