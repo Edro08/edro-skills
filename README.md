@@ -25,14 +25,3 @@ edro-skills/
     ├── SKILL.md
     └── ref/          # Convenciones y patrones de Go
 ```
-
-## Instalación / Uso
-
-Copia o enlaza la carpeta de cada skill dentro de tu directorio de configuración global o del proyecto:
-
-- **Global (todos los proyectos)**:
-  - `~/.gemini/config/skills/<skill-name>/`
-- **Por proyecto (versionado con el equipo)**:
-  - `<repo-root>/.agents/skills/<skill-name>/`
-
-Una vez instalada, el agente la detecta automáticamente según la tarea o puedes invocarla con `/edro-sdlc` o `/edro-dev-go`.
