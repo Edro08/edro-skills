@@ -2,7 +2,7 @@
 
 - **Date**: YYYY-MM-DD
 - **Cycle**: Initial / Retry #1 / Retry #2
-- **Scope Audited**: `agents/specs/architecture.md`, codebase, configs, dependencies
+- **Scope Audited**: `docs/specs/architecture.md`, codebase, configs, dependencies
 
 ## 1. Automated Scans Executed
 | Tool / Scan | Command | Result |

@@ -1,9 +1,9 @@
 # Agent Instructions
 
-Read the applicable specifications in `agents/specs/` (when present) before modifying code:
-- `agents/specs/prd.md`: product scope, user stories, and acceptance criteria *(created in Product step)*.
-- `agents/specs/design.md`: UI/API/CLI design contracts and mockup references (`*.png`, `*.svg`, `*.json`, `*.html`) *(created in Design step)*.
-- [`agents/specs/architecture.md`](agents/specs/architecture.md): package boundaries, dependency direction, and composition rules.
+Read the applicable specifications in `docs/specs/` and mockups in `docs/mockups/` (when present) before modifying code:
+- `docs/specs/prd.md`: product scope, user stories, and acceptance criteria *(created in Product step)*.
+- `docs/specs/design.md`: UI/API/CLI design contracts and references to mockups in `docs/mockups/` (`*.png`, `*.svg`, `*.html`) *(created in Design step)*.
+- [`docs/specs/architecture.md`](docs/specs/architecture.md): package boundaries, dependency direction, and composition rules.
 
 ## Context and Progress Tracking
 
