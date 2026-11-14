@@ -1,9 +1,9 @@
 # Design Specification — [ProjectName / Feature]
 
-## 1. Design Artifacts in `agents/specs/`
-List every mockup, diagram, or contract stored alongside this file using relative links:
-- UI Mockup (HTML / PNG / SVG): [`mockup-main.html`](mockup-main.html) *(if applicable)*
-- API / Endpoint Contracts: [`endpoints.json`](endpoints.json) *(if applicable)*
+## 1. Design Artifacts in `docs/mockups/` & `docs/specs/`
+List every mockup, diagram, or contract using relative links:
+- UI Mockup (HTML / PNG / SVG in `docs/mockups/`): [`../mockups/mockup-main.html`](../mockups/mockup-main.html) *(if applicable)*
+- API / Endpoint Contracts (in `docs/specs/`): [`endpoints.json`](endpoints.json) *(if applicable)*
 
 ## 2. Experience & Interface Breakdown
 ### UI / Visual Layout *(if applicable)*

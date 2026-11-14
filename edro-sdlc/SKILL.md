@@ -1,24 +1,27 @@
 ---
 name: edro-sdlc
 description: >-
-  Edro's dual-mode engineering skill and multi-role SDLC workflow. Runs in
+  Edro's tri-mode engineering skill and multi-role SDLC workflow. Runs in
   Lite Mode (mandatory Step 0 router -> jump to Step 4 Dev + mandatory Gate 3,
-  Step 5 Code Review, Step 6 QA, or Step 7 Security) or SDLC Mode (multi-role
+  Step 5 Code Review, Step 6 QA, or Step 7 Security), SDLC Mode (multi-role
   orchestrator via `/edro-sdlc`: Step 0 Onboarding -> Step 1 Product -> Step 2
   Design + Gate 1 -> Step 3 Tech Lead + Gate 2 -> Step 4 Dev -> Step 5 Code
   Review + Gate 3 Consultant -> Step 6 QA -> Step 7 Opt-in Security -> Step 8
-  UAT & Git Consent), enforcing branch safety, `AGENTS.md`/`agents/` context
-  tracking, portability audits, and explicit Git commit consent.
+  UAT & Git Consent), or Docs Mode (read-only reverse-documentation of an
+  existing codebase into `docs/` with optional `agents/context/fases.md`),
+  enforcing branch safety, context tracking, portability audits, and explicit
+  Git commit consent.
 ---
 
 # Edro SDLC & Dev Standards Workflow
 
-This skill supports **two execution modes**. Pick the lightest mode that fits the task (or follow the user's explicit request):
+This skill supports **three execution modes**. Pick the lightest mode that fits the task (or follow the user's explicit request):
 
 | Mode | When to Use | How It Executes |
 | :--- | :--- | :--- |
 | **Lite Mode** *(Modular Router)* | Small bugfixes, minor refactors, standalone code reviews, targeted QA/Security runs, repo onboarding, or tasks not needing PRD/mockups | **Step 0 (`Gate 0`) is always mandatory**. From Step 0, jump to **`Step 4` (Dev)**, **`Step 5` (Code Review)**, **`Step 6` (QA)**, or **`Step 7` (Security)**. **Whichever step (`4`, `5`, `6`, or `7`) runs in Lite Mode triggers `Gate 3` (Tech Lead Consultant) on completion (`PASS` or `FAIL`)**—never auto-remediating without your direction—until you approve moving to **`Step 8`**. |
-| **SDLC Mode** *(Multi-Role)* | New features, product/UI/API/CLI design, substantial architecture changes, or explicit full-cycle `/edro-sdlc` requests | Act as the **Orchestrator** coordinating clean role subagents (Option A) via `agents/` handoff contracts from **`Step 0` → `Step 8`**. Never merge `dev` with `qa` or `security`. |
+| **SDLC Mode** *(Multi-Role)* | New features, product/UI/API/CLI design, substantial architecture changes, or explicit full-cycle `/edro-sdlc` requests | Act as the **Orchestrator** coordinating clean role subagents (Option A) via `docs/` & `agents/context/` handoff contracts from **`Step 0` → `Step 8`**. Never merge `dev` with `qa` or `security`. |
+| **Docs Mode** *(Reverse & Assisted Docs)* | Existing codebase lacking specs/mockups (**Full Reverse-Docs**), or creating targeted specs/mockups from scratch or for a specific module (**Assisted Docs**) without modifying code | **Read-only on application code**. Step 0 asks for **(A) Variant** (*Full Reverse-Docs* vs *Assisted/Targeted Docs* for what the user specifies) and **(B) Output Scope** (*`docs/` only*, *`docs/` + `AGENTS.md` + `agents/context/`*, or *scratch export*). Runs only the needed doc role(s) → **`Gate 3`** → `audit-paths` → **`Step 8`**. |
 
 ```text
 [Lite Mode]:  [0. Git & Onboarding (Mandatory)]
@@ -28,7 +31,12 @@ This skill supports **two execution modes**. Pick the lightest mode that fits th
                  └──▶ [7. Security direct] ────────────┘       ├── Trigger another step ──▶ [5] / [6] / [7]
                                                                └── Approve ("todo bien") ──▶ [8. Closure & Git]
 
-[SDLC Mode]:  [0. Git & Onboarding] ─▶ [1. Product (prd.md)] ─▶ [2. Design (specs/*)] ─▶ ✋ GATE 1: User approves mockups
+[Docs Mode]:  [0. Variant + Output Scope: Full Reverse-Docs vs Assisted/Targeted | docs/ only vs +fases.md vs scratch]
+                 ├─ Full Reverse-Docs ─▶ [product: prd.md] ─▶ [design: design.md + mockups/*] ─▶ [tech-lead: architecture.md (+ fases.md)]
+                 └─ Assisted / Targeted ─▶ [Only requested doc/mockup/spec role(s) from scratch or target module]
+                 ──▶ ✋ GATE 3 (Review docs & mockups) ─▶ [audit-paths] ─▶ [8. Closure / Git (if repo files written)]
+
+[SDLC Mode]:  [0. Git & Onboarding] ─▶ [1. Product (prd.md)] ─▶ [2. Design (docs/*)] ─▶ ✋ GATE 1: User approves mockups
                                                                                                       │
                  ┌────────────────────────────────────────────────────────────────────────────────────┘
                  ▼
@@ -68,6 +76,7 @@ This skill supports **two execution modes**. Pick the lightest mode that fits th
 | Close an already-reviewed task (`audit-paths`, `history.md`, `fases.md`, Git) | **Lite Mode**: **Step 4.4 → Step 8** |
 | New feature / product idea / UI, API, or CLI design | **SDLC Mode**: **Step 0 → Step 8** (full pipeline) |
 | Architecture or dev implementation with specs already approved | **SDLC Mode**: **Step 0 → Step 3 → Step 8** |
+| Document an existing codebase or create targeted specs/mockups from scratch (`read-only` on code) | **Docs Mode**: **Step 0 (Variant + Scope)** → Full (`product` + `design` + `tech-lead`) or Assisted (requested role/doc only) → **`Gate 3`** → **Step 8** |
 
 ---
 
@@ -77,14 +86,16 @@ Define/invoke clean role subagents on demand (`define_subagent` with `EnableWrit
 
 | Subagent Role | Role Prompt | Write Scope Boundary | Primary Output Contract |
 | :--- | :--- | :--- | :--- |
-| `product` | [roles/product.md](roles/product.md) | Only `agents/specs/prd.md` (no source code) | `agents/specs/prd.md` |
-| `design` | [roles/design.md](roles/design.md) | Only `agents/specs/*` (no source code) | `agents/specs/design.md` + `.png`/`.svg`/`.json`/`.html` mockups |
-| `tech-lead` | [roles/tech-lead.md](roles/tech-lead.md) | Only `agents/specs/architecture.md`, `agents/context/fases.md`, & `agents/context/code-review.md` | `architecture.md`, `fases.md`, & `code-review.md` (`STATUS: PASS \| FAIL`) |
+| `product` | [roles/product.md](roles/product.md) | Only `docs/specs/prd.md` (no source code) | `docs/specs/prd.md` |
+| `design` | [roles/design.md](roles/design.md) | Only `docs/specs/*` & `docs/mockups/*` (no source code) | `docs/specs/design.md` + `.png`/`.svg`/`.html` mockups |
+| `tech-lead` | [roles/tech-lead.md](roles/tech-lead.md) | Only `docs/specs/architecture.md`, `agents/context/fases.md`, & `agents/context/code-review.md` | `architecture.md`, `fases.md`, & `code-review.md` (`STATUS: PASS \| FAIL`) |
 | `dev` | [roles/dev.md](roles/dev.md) | Full repo + scripts + `agents/context/fases.md` | Code, unit tests, progress reports, `audit-paths` clean |
 | `qa` | [roles/qa.md](roles/qa.md) | Only test execution + `agents/context/qa-report.md` (no code edits) | `agents/context/qa-report.md` (`STATUS: PASS \| FAIL`) |
 | `security` | [roles/security.md](roles/security.md) | Only scanners + `agents/context/security-report.md` (no code edits) | `agents/context/security-report.md` (`STATUS: PASS \| FAIL`) |
 
-> **Orchestrator & Anti-bias rules**:
+> **Orchestrator, Portability & Anti-bias rules**:
+> - **Global Portability Rule ([references/portability.md](references/portability.md))**: Applies across **all 3 modes** (`Lite`, `SDLC`, `Docs`) and **all roles** (`product`, `design`, `tech-lead`, `dev`, `qa`, `security`)—never write hardcoded host paths (`C:\...`, `/Users/...`, `/home/...`, `file:///`) into repo code, scripts, tests, specs, or `agents/context/` reports.
+> - **Resolved Artifact Root**: The Orchestrator resolves the effective artifact root in Step 0 (repository root when repo onboarding is enabled, or `<Artifact Directory Path>/scratch/` when declined) and passes the resolved target paths to each subagent.
 > - **Orchestrator owns user communication & invocation**: Subagents return their artifacts and summaries to the Orchestrator; the Orchestrator presents all questions/Gates (`Gate 0`–`Gate 5`) to the user and invokes the next subagent.
 > - **Fresh verification contexts**: Always launch `qa` and `security` as **fresh subagents** so they verify against `prd.md`, `design.md`, `architecture.md`, and real execution—never inheriting `dev`'s assumptions.
 
@@ -95,12 +106,12 @@ Define/invoke clean role subagents on demand (`define_subagent` with `EnableWrit
 1. **Branch Safety Preflight**:
    - Run `git rev-parse --is-inside-work-tree`, `git branch --show-current`, and `git status --short`.
    - **HARD GATE**: If on `main` or `master` and files will be modified, **STOP** and ask the user to create/switch to a dedicated branch (or follow the active Git skill such as `edro-git`).
-2. **Context Onboarding** ([ref/agents.md](ref/agents.md)):
-   - Check for root `AGENTS.md` and `agents/` (`specs/`, `context/`).
+2. **Context Onboarding**:
+   - Check for root `AGENTS.md`, `docs/` (`specs/`, `mockups/`), and `agents/context/`.
    - If missing, **STOP** and ask verbatim:
      > *"He notado que este proyecto aún no cuenta con `AGENTS.md` ni la estructura de contexto en `agents/`. ¿Deseas que los configure ahora para llevar el registro de fases, historial de cambios y arquitectura?"*
    - If approved, scaffold base templates from [`resources/`](resources/).
-   - If declined, do **not** create `AGENTS.md` or `agents/` in the repository; instead, route all role handoff files (`specs/*` and `context/*` reports) under `<Artifact Directory Path>/scratch/agents/` for the duration of the session.
+   - If declined, do **not** create `AGENTS.md`, `docs/`, or `agents/` in the repository; instead, route all role handoff files (`docs/*` and `agents/context/*` reports) under `<Artifact Directory Path>/scratch/` for the duration of the session.
    - If already present, read `AGENTS.md` and current `agents/context/fases.md` / top of `agents/context/history.md`.
 3. **Lite Mode Step Selection (when running in Lite Mode)**:
    - Route directly to the target step requested by the user (**`Step 4` Dev**, **`Step 5` Code Review**, **`Step 6` QA**, or **`Step 7` Security**). If ambiguous, ask which step to run.
@@ -111,14 +122,14 @@ Define/invoke clean role subagents on demand (`define_subagent` with `EnableWrit
 
 1. Invoke the `product` subagent to analyze the user request and identify ambiguities.
 2. If `product` surfaces open questions, the Orchestrator presents them concisely to the user and passes the answers back to `product` before finalizing scope.
-3. Produce `agents/specs/prd.md` with clear **In Scope**, **Out of Scope**, and testable **Acceptance Criteria**.
+3. Produce `docs/specs/prd.md` with clear **In Scope**, **Out of Scope**, and testable **Acceptance Criteria**.
 
 ---
 
 ## Step 2: Design & Mockups (`design` + `Gate 1`)
 
-1. Invoke the `design` subagent with `agents/specs/prd.md`.
-2. Store all design deliverables inside `agents/specs/` (`.png`, `.svg`, endpoint `.json`, HTML mockups, or CLI samples) and summarize them in `agents/specs/design.md`.
+1. Invoke the `design` subagent with `docs/specs/prd.md`.
+2. Store mockups in `docs/mockups/` (`.png`, `.svg`, HTML mockups) and API/CLI contracts in `docs/specs/` (`.json`, `.yaml`), summarizing them in `docs/specs/design.md`.
 3. **HARD GATE 1 (User Design Sign-off)**:
    - The Orchestrator presents the base design and mockups to the user.
    - Debate improvements and iterate with `design` (and `product` if scope shifts) until the user explicitly approves the concrete target.
@@ -128,7 +139,7 @@ Define/invoke clean role subagents on demand (`define_subagent` with `EnableWrit
 ## Step 3: Architecture & Phase Planning (`tech-lead` + `Gate 2`)
 
 1. Invoke the merged `tech-lead` subagent (Tech Lead + Architect) with `prd.md` and `design.md`.
-2. Update `agents/specs/architecture.md` and break work into phases in `agents/context/fases.md`.
+2. Update `docs/specs/architecture.md` and break work into phases in `agents/context/fases.md`.
 3. **GATE 2 (Tech Lead Consultant)**: For substantial features or architectural shifts, the Orchestrator presents `architecture.md` and `fases.md` to the **Tech Lead Consultant** for alignment before coding.
 
 ---
@@ -143,11 +154,9 @@ Define/invoke clean role subagents on demand (`define_subagent` with `EnableWrit
    - **Minor adjustment** *(preserves existing UX, API/CLI contracts, and architecture)*: `tech-lead` approves and `dev` applies it directly in Step 4.
    - **Contract-changing adjustment** *(alters scope, UI/API/CLI behavior, architecture, or phase breakdown)*: **pause** affected implementation and sync only the impacted specs before continuing:
      - Scope change → `product` updates `prd.md`.
-     - UI/Endpoint/CLI change → `design` updates `design.md` / `specs/*` (+ quick user sign-off at `Gate 1`).
+     - UI/Endpoint/CLI change → `design` updates `design.md` / `docs/mockups/*` / `docs/specs/*` (+ quick user sign-off at `Gate 1`).
      - Architecture or phase shift → `tech-lead` updates `architecture.md` and re-plans `fases.md`.
-4. **Portability & Unit Test Gate (`Step 4.4`)**: `dev` must verify unit tests pass and run the portability scanner from the repo root with `exit 0` ([ref/portability.md](ref/portability.md)):
-   - Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-skill>/scripts/audit-paths.ps1" -Root .`
-   - POSIX: `bash "<path-to-skill>/scripts/audit-paths.sh" .`
+4. **Portability & Unit Test Gate (`Step 4.4`)**: `dev` must verify unit tests pass and run the `audit-paths` scanner from [references/portability.md](references/portability.md) with `exit 0`.
 5. **Transition from Step 4**:
    - In **SDLC Mode**: proceed to **Step 5** (`5.1` autonomous `tech-lead` review → `5.2 Gate 3`).
    - In **Lite Mode**: proceed directly to **`Gate 3` (`Step 5.2`)**, presenting the technical summary to the user (who may request changes, trigger full `Step 5` / `Step 6` / `Step 7` on demand, or approve to jump to **Step 8**).
@@ -178,7 +187,7 @@ Initialize `review_retry_count = 0`. Working notes, review findings, and consult
      - From `Gate 3`, the user can also request running full **Step 5** (`5.1`), **Step 6 (QA)**, or **Step 7 (Security)** before closing.
 3. **5.3 Consolidation on `Gate 3` Sign-off (*"todo bien"*)**:
    - Once the user explicitly approves at `Gate 3`:
-     - `tech-lead` marks `STATUS: PASS` in `agents/context/code-review.md` and **integrates/consolidates all final changes into `agents/specs/architecture.md` and `agents/context/fases.md`**.
+     - `tech-lead` marks `STATUS: PASS` in `agents/context/code-review.md` and **integrates/consolidates all final changes into `docs/specs/architecture.md` and `agents/context/fases.md`**.
      - If any consultant-requested change altered external UX/CLI/API contracts or scope, sync `design.md` / `prd.md` so **Step 6 (QA)** validates against accurate specs.
    - Proceed to **Step 6 (QA Verification)** in SDLC Mode (or to **Step 8** in Lite Mode unless the user requested Step 6/7).
 
@@ -234,12 +243,53 @@ Initialize `qa_retry_count = 0`.
 
 ---
 
+## Docs Mode Execution (Full Reverse-Docs & Assisted Docs)
+
+Use **Docs Mode** when the user wants documentation or mockups generated **without modifying application source code**:
+
+1. **Step 0 — Variant & Output Scope Prompt (Mandatory)**:
+   - Check branch safety (if repo files will be written).
+   - Confirm **which Docs variant** applies (if not already explicit in the user's prompt):
+     - **Full Reverse-Documentation**: analyze the entire existing codebase and generate the full baseline (`prd.md`, `design.md` + `docs/mockups/*`, `architecture.md`).
+     - **Assisted / Targeted Docs**: create specific documentation from scratch or for a user-specified module/topic (e.g., a single `spec_*.md`, one mockup in `docs/mockups/`, `architecture.md` for a subsystem, or a standalone `prd.md`).
+   - **STOP and ask the user explicitly** where to place the output:
+     > *"En **Docs Mode** no modificaré el código fuente. ¿Cómo quieres generar la documentación?"*
+     > 1. **Solo `docs/`** (`docs/specs/` + `docs/mockups/`, sin crear `AGENTS.md` ni `agents/context/fases.md` — ideal si solo quieres la documentación o usarla en otra parte).
+     > 2. **Completo (`docs/` + `AGENTS.md` + `agents/context/`)** (incluye `fases.md` con lo ya implementado en `🟢` y pendientes en `⚪`, más `history.md`).
+     > 3. **Solo exportación temporal** (guardar en `<Artifact Directory Path>/scratch/docs/` sin tocar el repositorio).
+2. **Documentation Execution (`read-only` on source code)**:
+   - **If Full Reverse-Documentation**:
+     - `product` → inspects implemented features and writes `docs/specs/prd.md`.
+     - `design` → inspects existing UI/API/CLI code and generates `docs/specs/design.md` + missing mockups/contracts in `docs/mockups/` and `docs/specs/`.
+     - `tech-lead` → inspects codebase structure and writes `docs/specs/architecture.md` (and `agents/context/fases.md` **only if** the user chose Option 2).
+   - **If Assisted / Targeted Docs**:
+     - Clarify any missing details with the user if creating from scratch, then run **only** the matching role(s) (`product`, `design`, or `tech-lead`) to produce the exact requested spec/mockup/doc (plus `fases.md` **only if** Option 2 was chosen).
+3. **Review, Portability & Closure**:
+   - Present generated docs/mockups at **`Gate 3`** for user review and iterate if requested.
+   - Run `audit-paths` on the generated files (`Step 4.4`).
+   - Run **Step 8** (update `history.md` only if `agents/context/` was opted in; ask for Git consent only if repository files were written).
+
+---
+
 ## Quick Reference & Assets
 
 | Area | Resource | Purpose |
 | :--- | :--- | :--- |
 | **Role Prompts** | [`roles/`](roles/) | `product.md`, `design.md`, `tech-lead.md`, `dev.md`, `qa.md`, `security.md` |
-| **Context Protocol** | [ref/agents.md](ref/agents.md) | Onboarding gate, artifact contracts, `history.md` formatting |
-| **Portability Rules** | [ref/portability.md](ref/portability.md) | Path-agnostic rules and audit remediation |
+| **Portability Rules** | [references/portability.md](references/portability.md) | Path-agnostic rules and audit remediation |
 | **Templates** | [`resources/`](resources/) | `AGENTS.template.md`, `prd.md`, `design.md`, `architecture.md`, `history.md`, `fases.md`, `code-review.md`, `qa-report.md`, `security-report.md` |
 | **Audit Scripts** | [scripts/audit-paths.ps1](scripts/audit-paths.ps1), [scripts/audit-paths.sh](scripts/audit-paths.sh) | Automated host-path scanners |
+
+### Scaffolding Mapping (Target Path ← Template)
+
+| Target Path | Template Source | Owner Role | Update Protocol |
+| :--- | :--- | :--- | :--- |
+| `AGENTS.md` | [resources/AGENTS.template.md](resources/AGENTS.template.md) | Orchestrator | Copy as repo root `AGENTS.md`; update when repo-wide specs or agent contracts change. |
+| `docs/specs/prd.md` | [resources/prd.md](resources/prd.md) | `product` | Created/updated in Step 1 (or Docs Mode). |
+| `docs/specs/design.md` | [resources/design.md](resources/design.md) | `design` | Created/updated in Step 2 (or Docs Mode) alongside mockups in `docs/mockups/` & contracts in `docs/specs/`. |
+| `docs/specs/architecture.md` | [resources/architecture.md](resources/architecture.md) | `tech-lead` | Updated in Step 3 (or Docs Mode) and consolidated at `Gate 3`. |
+| `agents/context/fases.md` | [resources/fases.md](resources/fases.md) | `tech-lead` / `dev` | Track `🟢` / `🟡` / `⚪`; consolidated at `Gate 3` and closed in Step 8. |
+| `agents/context/code-review.md` | [resources/code-review.md](resources/code-review.md) | `tech-lead` | Active log during Step 5 + `Gate 3`; marked `STATUS: PASS` on approval. |
+| `agents/context/history.md` | [resources/history.md](resources/history.md) | `dev` / Orchestrator | Prepend completed milestone at the **top** (reverse chronological order) in Step 8. |
+| `agents/context/qa-report.md` | [resources/qa-report.md](resources/qa-report.md) | `qa` | Updated in Step 6 with binary `STATUS: PASS \| FAIL`. |
+| `agents/context/security-report.md` | [resources/security-report.md](resources/security-report.md) | `security` | Updated in Step 7 (when opted in at `Gate 4`) with binary `STATUS: PASS \| FAIL`. |

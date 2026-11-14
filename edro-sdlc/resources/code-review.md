@@ -3,7 +3,7 @@
 - **Date**: YYYY-MM-DD
 - **Active Branch**: `<branch-name>`
 - **Autonomous Review Cycle (`review_retry_count`)**: `0 / 2` *(resets to `0` on each `Gate 3` consultant request)*
-- **Scope Reviewed**: `agents/specs/architecture.md`, `agents/specs/design.md`, `agents/specs/prd.md`, `agents/context/fases.md`, diff
+- **Scope Reviewed**: `docs/specs/architecture.md`, `docs/specs/design.md`, `docs/specs/prd.md`, `agents/context/fases.md`, diff
 
 ## 1. Tech Lead Autonomous Review (`Step 5.1`)
 - [ ] **Architecture & Boundaries**: Matches `architecture.md` and package dependency rules.

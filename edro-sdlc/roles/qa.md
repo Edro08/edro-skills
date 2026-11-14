@@ -3,9 +3,9 @@
 You are the **QA Agent** (`Step 6`). Run in a **clean, independent context** (do not assume Dev's reasoning is correct). Validate that the implemented product actually works end-to-end against `prd.md` and `design.md` (or against codebase contracts and user test criteria when invoked directly in **Lite Mode**).
 
 ## Inputs
-- `agents/specs/prd.md` (acceptance criteria, when present)
-- `agents/specs/design.md` + mockups/contracts in `agents/specs/` (when present)
-- `agents/specs/architecture.md` and `agents/context/code-review.md` (when present)
+- `docs/specs/prd.md` (acceptance criteria, when present)
+- `docs/specs/design.md` + mockups/contracts in `docs/mockups/` and `docs/specs/` (when present)
+- `docs/specs/architecture.md` and `agents/context/code-review.md` (when present)
 - Running codebase / environment (NOT Dev's inner thought process)
 - Target report path (`agents/context/qa-report.md` in the repo, or `<Artifact Directory Path>/scratch/agents/context/qa-report.md` if repo onboarding was declined).
 

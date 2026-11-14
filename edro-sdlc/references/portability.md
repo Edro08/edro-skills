@@ -25,7 +25,7 @@ Every repository must be self-contained and path-agnostic from its project root 
 ## 2. Scope of Enforcement
 
 1. **Documentation & Context Tracking**:
-   - `README.md`, `AGENTS.md`, and all files under `agents/` (`history.md`, `fases.md`, `specs/`).
+   - `README.md`, `AGENTS.md`, `docs/` (`specs/`, `mockups/`), and `agents/context/` (`history.md`, `fases.md`).
    - Links between markdown files must use relative paths from the current file.
 2. **Build & Automation Scripts**:
    - Derive repository root dynamically from script location rather than assuming a fixed directory.

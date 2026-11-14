@@ -2,7 +2,7 @@
 
 - **Date**: YYYY-MM-DD
 - **Cycle**: Initial / Retry #1 / Retry #2
-- **Scope Tested**: `agents/specs/prd.md`, `agents/specs/design.md`
+- **Scope Tested**: `docs/specs/prd.md`, `docs/specs/design.md`
 
 ## 1. Test Environment & Real Checks Executed
 | Check / Scenario | Command or Method | Observed Result | Pass/Fail |
