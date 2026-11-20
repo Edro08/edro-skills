@@ -93,3 +93,14 @@ To switch branches across multiple repositories safely (e.g., after editing the 
   - `-Pull`: run `git pull --ff-only` after switching.
   - `-Stash`: stash uncommitted changes instead of skipping dirty repos (by default dirty repos are skipped).
   - `-OutFile <path.md>` / `-Console`: customize report output (default: `switch-report.md`).
+
+### Bulk Clean Merged (`[gone]`) Branches
+
+To clean local branches whose remote tracking branch was merged and deleted (`[gone]`):
+
+- Run the bundled cleanup script (prefer `-DryRun` first):
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/clean-branches.ps1" -Path "." -DryRun
+  ```
+- Safely deletes with `git branch -d` (never deletes `main`, `master`, `develop`, or the current branch).
+- Flags: `-Services svc-1,svc-2`, `-NoFetch`, `-OutFile <path.md>` (default: `clean-branches-report.md`), `-Console`, `-Depth 2`.

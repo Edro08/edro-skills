@@ -55,6 +55,18 @@ When the user asks to scan or fix Go vulnerabilities across multiple services/re
 
 ---
 
+## Bulk Go Verification (`go vet` + `go test`)
+
+When the user asks to run `go vet` and `go test` across multiple Go services:
+
+1. Run the bundled PowerShell script (writes `go-tests-report.md` with summary table and failure details only for failed services):
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/test-go-repos.ps1" -Path "."
+   ```
+2. Optional flags: `-Race` (`go test -race ./...`), `-SkipVet`, `-Services svc-1,svc-2`, `-OutFile <path.md>`, `-Console`, `-Depth 2`.
+
+---
+
 ## Reference & Customization
 
 - [ref/conventions.md](ref/conventions.md): Detailed conventions for project layout, error/logging patterns, testing, and Go tooling.
