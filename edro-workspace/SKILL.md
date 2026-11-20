@@ -25,3 +25,13 @@ When the user asks what technology, language, or framework each service/folder i
 3. **Only** inspect a directory manually if the script reports `Unknown` and the user needs more detail on that specific folder.
 
 > For multi-repo `git fetch` or branch inventory (`main`/`master`, `sprint/*`, `release/*`, `feat/*`), use the `edro-git` skill (`scripts/fetch-branches.ps1`).
+
+## Searching Across Services
+
+When the user asks to find where a URL, dependency, symbol, or pattern is used across multiple services in a workspace:
+
+1. Run the bundled search script (writes `search-report.md` grouped by service and prints 1 summary line):
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/search-workspace.ps1" -Path "." -Pattern "<pattern>"
+   ```
+2. Optional flags: `-Include "*.go"`, `-Regex`, `-CaseSensitive`, `-Services svc-1,svc-2`, `-OutFile <path.md>`, `-Console`, `-Depth 2`.
