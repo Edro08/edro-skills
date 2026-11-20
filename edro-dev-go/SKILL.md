@@ -35,6 +35,26 @@ go test -race ./...
 
 ---
 
+## Bulk Go Vulnerability Audit & Remediation
+
+When the user asks to scan or fix Go vulnerabilities across multiple services/repositories:
+
+1. Run the bundled PowerShell script (defaults to `-Audit` mode and writes `go-vulns-report.md` to minimize token usage):
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/fix-go-vulns.ps1" -Path "." -Audit
+   ```
+2. Add `-Fix` to automatically upgrade vulnerable third-party dependencies with a `fixed_version` (`go get` + `go mod tidy`), run `go vet` / `go test`, and re-scan:
+   - `-FixStdlib`: also upgrade `go@<fixed_version>` when `govulncheck` reports `stdlib` vulnerabilities.
+   - `-GoVersion <ver>`: run `go mod tidy -go=<ver>` across matching repos to pin/bump the Go directive.
+   - `-UpgradeAll`: run `go mod tidy` + `go get -u ./...` + `go mod tidy` instead of surgical dependency upgrades.
+   - `-Services svc-1,svc-2`: target specific Go service folders.
+   - `-InstallTool`: auto-install `govulncheck` if not present.
+   - `-Race` / `-SkipTests`: control test verification after upgrading.
+   - `-OutFile <path.md>` / `-Console`: customize report output.
+3. Never auto-commit or push changes; follow `edro-git` for branch and commit confirmation.
+
+---
+
 ## Reference & Customization
 
 - [ref/conventions.md](ref/conventions.md): Detailed conventions for project layout, error/logging patterns, testing, and Go tooling.
