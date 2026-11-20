@@ -76,3 +76,20 @@ When the user asks to `git fetch` across multiple services/repositories or wants
   - `-NoFetch` to inspect cached branches without fetching from remotes.
   - `-Console` to print the summary directly to stdout instead of writing a `.md` file.
   - `-Depth 2` if repositories are nested in subdirectories.
+
+### Bulk Branch Switch
+
+To switch branches across multiple repositories safely (e.g., after editing the `Current` column in `branches-report.md`, or moving services to `main`/`master` or a shared sprint branch):
+
+- Run the bundled switch script (always prefer `-DryRun` first when switching many repos):
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/switch-branches.ps1" -Path "." -ReportFile "branches-report.md" -DryRun
+  ```
+- Modes & flags:
+  - Default (report-driven): reads target branches from the `Current` column of `-ReportFile` (`branches-report.md`).
+  - `-TargetMain`: switches matching repositories to their `main` or `master` branch.
+  - `-Branch <name>`: switches matching repositories to a specific branch.
+  - `-Services svc-1,svc-2`: filter target service folders.
+  - `-Pull`: run `git pull --ff-only` after switching.
+  - `-Stash`: stash uncommitted changes instead of skipping dirty repos (by default dirty repos are skipped).
+  - `-OutFile <path.md>` / `-Console`: customize report output (default: `switch-report.md`).
