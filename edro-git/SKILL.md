@@ -2,10 +2,11 @@
 name: edro-git
 description: >-
   Edro's Git workflow conventions, dedicated working branch rules,
-  branch-prefixed commit message formatting (`<branch>: <description>`), and
-  mandatory explicit user confirmation before committing or pushing. Use when
-  creating branches, staging changes, drafting commit messages, or executing
-  Git commit/push operations.
+  branch-prefixed commit message formatting (`<branch>: <description>`),
+  mandatory explicit user confirmation before committing or pushing, and
+  multi-repo fetch/branch inventory utilities. Use when creating branches,
+  staging changes, drafting commit messages, executing Git commit/push
+  operations, or fetching/listing branches across one or more services.
 ---
 
 # Edro Git Workflow & Commit Conventions
@@ -58,3 +59,68 @@ Unless the repository explicitly defines another standard (such as Conventional 
    - Inspect `git branch --show-current` and `git status --short`, stage/verify changes as needed, and present the proposed commit message.
 3. **Wait for explicit user instruction**:
    - Only run `git commit` (and `git push` if requested) when the user explicitly instructs it (e.g., *"commit"*, *"haz el commit"*, *"commit and push"*).
+
+---
+
+## 4. Multi-Repo Fetch & Branch Inventory
+
+When the user asks to `git fetch` across multiple services/repositories or wants an overview of their `main`/`master`, intermediate (`sprint/*`, `release/*`, `develop`, `staging`), task (`feat/*`, `fix/*`, `bug/*`, `task/*`), and current branches:
+
+- Run the bundled PowerShell script instead of issuing per-repo commands (by default it writes a Markdown table to `branches-report.md` and prints a single summary line to keep token usage minimal):
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/fetch-branches.ps1" -Path "."
+  ```
+- Optional flags:
+  - `-OutFile <path.md>` to customize the Markdown report path (default: `branches-report.md`).
+  - `-Services svc-1,svc-2` to target specific service folders.
+  - `-NoFetch` to inspect cached branches without fetching from remotes.
+  - `-Console` to print the summary directly to stdout instead of writing a `.md` file.
+  - `-Depth 2` if repositories are nested in subdirectories.
+
+### Bulk Branch Switch
+
+To switch branches across multiple repositories safely (e.g., after editing the `Current` column in `branches-report.md`, or moving services to `main`/`master` or a shared sprint branch):
+
+- Run the bundled switch script (always prefer `-DryRun` first when switching many repos):
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/switch-branches.ps1" -Path "." -ReportFile "branches-report.md" -DryRun
+  ```
+- Modes & flags:
+  - Default (report-driven): reads target branches from the `Current` column of `-ReportFile` (`branches-report.md`).
+  - `-TargetMain`: switches matching repositories to their `main` or `master` branch.
+  - `-Branch <name>`: switches matching repositories to a specific branch.
+  - `-Services svc-1,svc-2`: filter target service folders.
+  - `-Pull`: run `git pull --ff-only` after switching.
+  - `-Stash`: stash uncommitted changes instead of skipping dirty repos (by default dirty repos are skipped).
+  - `-OutFile <path.md>` / `-Console`: customize report output (default: `switch-report.md`).
+
+### Bulk Clean Merged (`[gone]`) Branches
+
+To clean local branches whose remote tracking branch was merged and deleted (`[gone]`):
+
+- Run the bundled cleanup script (prefer `-DryRun` first):
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/clean-branches.ps1" -Path "." -DryRun
+  ```
+- Safely deletes with `git branch -d` (never deletes `main`, `master`, `develop`, or the current branch).
+- Flags: `-Services svc-1,svc-2`, `-NoFetch`, `-OutFile <path.md>` (default: `clean-branches-report.md`), `-Console`, `-Depth 2`.
+
+### Bulk Create Branch + Draft MR/PR (`glab` / `gh`)
+
+To create a new branch `Y` from an origin branch `X` (defaulting to `Current` in `branches-report.md`, and reading `Y` from the `New` column when `-NewBranch` is omitted — skipping rows with empty/`-` `New`), open a Draft MR/PR, and switch local clean repos to `Y`:
+
+- Always preview with `-DryRun` first:
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/bulk-branch-mr.ps1" -Path "." -ReportFile "branches-report.md" -NewBranch "fix/go-vulns" -DryRun
+  ```
+- Auto-detects `glab` (GitLab, no empty commit needed) vs `gh` (GitHub, pass `-AllowEmptyCommit` if opening Draft PR immediately). Falls back to REST API using Windows Credential Manager (`git credential fill`) or `GITLAB_TOKEN` / `GITHUB_TOKEN` when `glab`/`gh` CLIs are not installed.
+- Flags: `-FromMain`, `-SourceBranch <X>`, `-TargetBranch <branch>`, `-Provider auto|gh|glab`, `-Services svc-1,svc-2`, `-NoDraft`, `-NoSwitch`, `-OutFile <path.md>` (default: `bulk-mr-report.md`), `-Console`.
+
+### Bulk Pull (`git pull --ff-only`)
+
+To safely update one, N, or all repositories on their current branches without touching dirty or diverged repos:
+
+- Run the bundled pull script (supports `-DryRun`, `-Services svc-1,svc-2`, `-ReportFile branches-report.md`, `-Stash`, `-OutFile pull-report.md`, `-Console`):
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/pull-repos.ps1" -Path "."
+  ```
