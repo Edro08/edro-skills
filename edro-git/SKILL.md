@@ -104,3 +104,23 @@ To clean local branches whose remote tracking branch was merged and deleted (`[g
   ```
 - Safely deletes with `git branch -d` (never deletes `main`, `master`, `develop`, or the current branch).
 - Flags: `-Services svc-1,svc-2`, `-NoFetch`, `-OutFile <path.md>` (default: `clean-branches-report.md`), `-Console`, `-Depth 2`.
+
+### Bulk Create Branch + Draft MR/PR (`glab` / `gh`)
+
+To create a new branch `Y` from an origin branch `X` (defaulting to `Current` in `branches-report.md`, and reading `Y` from the `New` column when `-NewBranch` is omitted — skipping rows with empty/`-` `New`), open a Draft MR/PR, and switch local clean repos to `Y`:
+
+- Always preview with `-DryRun` first:
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/bulk-branch-mr.ps1" -Path "." -ReportFile "branches-report.md" -NewBranch "fix/go-vulns" -DryRun
+  ```
+- Auto-detects `glab` (GitLab, no empty commit needed) vs `gh` (GitHub, pass `-AllowEmptyCommit` if opening Draft PR immediately).
+- Flags: `-FromMain`, `-SourceBranch <X>`, `-TargetBranch <branch>`, `-Provider auto|gh|glab`, `-Services svc-1,svc-2`, `-NoDraft`, `-NoSwitch`, `-OutFile <path.md>` (default: `bulk-mr-report.md`), `-Console`.
+
+### Bulk Pull (`git pull --ff-only`)
+
+To safely update one, N, or all repositories on their current branches without touching dirty or diverged repos:
+
+- Run the bundled pull script (supports `-DryRun`, `-Services svc-1,svc-2`, `-ReportFile branches-report.md`, `-Stash`, `-OutFile pull-report.md`, `-Console`):
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/pull-repos.ps1" -Path "."
+  ```

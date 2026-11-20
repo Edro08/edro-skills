@@ -174,12 +174,12 @@ $lines.Add("# Git Branches Report")
 $lines.Add("")
 $lines.Add("Generated: $timestamp | Repositories: $($summaries.Count) | Fetch errors: $errorCount")
 $lines.Add("")
-$lines.Add("| Service | Current | Main/Master | Intermediate | Tasks | Other | Status |")
-$lines.Add("| --- | --- | --- | --- | --- | --- | --- |")
+$lines.Add("| Service | Current | Main/Master | Intermediate | Tasks | Other | Status | New |")
+$lines.Add("| --- | --- | --- | --- | --- | --- | --- | --- |")
 
 foreach ($s in $summaries) {
     $status = if ($s.FetchError) { "Error: $($s.FetchError -replace '\|', ' ')" } else { "OK" }
-    $row = "| ``$($s.Name)`` | ``$($s.Current)`` | $(Format-BranchCell $s.Base) | $(Format-BranchCell $s.Intermediate) | $(Format-BranchCell $s.Tasks) | $(Format-BranchCell $s.Other) | $status |"
+    $row = "| ``$($s.Name)`` | ``$($s.Current)`` | $(Format-BranchCell $s.Base) | $(Format-BranchCell $s.Intermediate) | $(Format-BranchCell $s.Tasks) | $(Format-BranchCell $s.Other) | $status | - |"
     $lines.Add($row)
 }
 

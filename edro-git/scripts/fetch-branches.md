@@ -62,3 +62,19 @@ Clasificación de ramas:
 - **Main/Master:** `main`, `master`
 - **Intermediate:** `sprint*`, `release*`, `develop`, `dev`, `staging`, `qa`, `uat`, `preprod`
 - **Tasks:** `feat/*`, `feature/*`, `fix/*`, `bug/*`, `bugfix/*`, `hotfix/*`, `task/*`, `chore/*`, `TASK-*` (y variantes con `-` o `_`)
+
+## Ejemplo de reporte generado (`branches-report.md`)
+
+```markdown
+# Git Branches Report
+
+Generated: 2026-11-19 22:25:00 | Repositories: 3 | Fetch errors: 0
+
+| Service | Current | Main/Master | Intermediate | Tasks | Other | Status | New |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `svc-1` | `main` | `main` | `sprint/24` | `feat/login` | - | OK | `fix/go-vulns` |
+| `svc-2` | `master` | `master` | - | - | - | OK | - |
+| `svc-3` | `release/v1` | `main` | `release/v1` | `TASK-102` | - | OK | - |
+```
+
+> Puedes editar la columna `Current` (para `switch-branches.ps1` o como origen `X` en `bulk-branch-mr.ps1`) y llenar la columna `New` en los servicios donde quieras crear una rama nueva + Draft MR/PR.

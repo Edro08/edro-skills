@@ -1,6 +1,6 @@
 # `switch-branches.ps1`
 
-Cambia de rama de forma segura en múltiples repositorios Git a partir de `branches-report.md` (columna `Current`) o usando una regla directa (`-TargetMain` o `-Branch`). Por defecto omite repositorios con cambios sin commitear.
+Cambia de rama de forma segura en múltiples repositorios Git a partir de `branches-report.md` (generado por [`fetch-branches.ps1`](fetch-branches.md), usando la columna `Current`) o usando una regla directa (`-TargetMain` o `-Branch`). Por defecto omite repositorios con cambios sin commitear.
 
 ## Requisitos
 
@@ -24,6 +24,12 @@ Cambia de rama de forma segura en múltiples repositorios Git a partir de `branc
 | `-Depth` | `int` | `1` | Profundidad de búsqueda de carpetas `.git`. |
 
 ## Ejemplos de uso manual
+
+Paso previo (si aún no tienes `branches-report.md`, genéralo con [`fetch-branches.ps1`](fetch-branches.md) y edita la columna `Current` en las filas que quieras cambiar):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\edro-git\scripts\fetch-branches.ps1" -Path "D:\Projects\Go"
+```
 
 Simular cambio según la columna `Current` editada en `branches-report.md`:
 
