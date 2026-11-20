@@ -34,17 +34,19 @@ Unless the repository explicitly defines another standard (such as Conventional 
 "<branch-name>: <change description>"
 ```
 
+- **No Co-Authors**: Agents are **STRICTLY PROHIBITED** from adding `Co-authored-by:` trailers or any co-author attribution to commit messages.
+
 ### Examples by Branch Type
 
 - **Task branch (`TASK-...`)**:
   - Branch: `TASK-001`
-  - Commit: `"TASK-001: implement health checks for database"`
+  - Commit: `"TASK-001 implement health checks for database"`
 - **Feature branch (`feat/...`)**:
   - Branch: `feat/integrate-go-utils`
-  - Commit: `"feat/integrate-go-utils: add git convention skill and register in agent instructions"`
+  - Commit: `"feat/integrate-go-utils add git convention skill and register in agent instructions"`
 - **Bugfix branch (`fix/...`)**:
   - Branch: `fix/read-timeout`
-  - Commit: `"fix/read-timeout: adjust server timeout to prevent early disconnect"`
+  - Commit: `"fix/read-timeout adjust server timeout to prevent early disconnect"`
 
 ---
 
