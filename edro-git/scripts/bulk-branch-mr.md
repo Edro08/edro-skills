@@ -6,7 +6,10 @@ Crea masivamente una rama nueva (`-NewBranch` o columna `New`) a partir de una r
 
 - Windows PowerShell 5.1+ o PowerShell 7+
 - `git` en el `PATH`
-- `glab` autenticado (`glab auth login`) para repos de GitLab y/o `gh` autenticado (`gh auth login`) para repos de GitHub
+- Autenticación (en orden de prioridad automático):
+  1. `glab` / `gh` CLI autenticado (`glab auth login` / `gh auth login`), **o sin instalar CLIs**:
+  2. Token guardado en **Windows Credential Manager** (vía `git credential fill`, con scope `api` en GitLab o `repo` en GitHub), o
+  3. Variable de entorno `$env:GITLAB_TOKEN` / `$env:GITHUB_TOKEN` (útil si usas SSH)
 
 ## Parámetros
 

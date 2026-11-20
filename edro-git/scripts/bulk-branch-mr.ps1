@@ -149,6 +149,58 @@ function Resolve-RepoProvider {
     return "unknown"
 }
 
+function Parse-RemoteInfo {
+    param([string]$RepoPath)
+
+    $url = (& git -C $RepoPath remote get-url origin 2>$null | Out-String).Trim()
+    if ($url -match "^https?://([^/]+)/(.+?)(?:\.git)?/?$") {
+        return [PSCustomObject]@{ Host = $Matches[1]; ProjectPath = $Matches[2] }
+    }
+    if ($url -match "^git@([^:]+):(.+?)(?:\.git)?$") {
+        return [PSCustomObject]@{ Host = $Matches[1]; ProjectPath = $Matches[2] }
+    }
+    if ($url -match "^ssh://git@([^/]+)/(.+?)(?:\.git)?$") {
+        return [PSCustomObject]@{ Host = $Matches[1]; ProjectPath = $Matches[2] }
+    }
+    return $null
+}
+
+function Get-ApiToken {
+    param(
+        [string]$HostName,
+        [string]$ProviderName
+    )
+
+    $prevTerm = $env:GIT_TERMINAL_PROMPT
+    $prevGcm = $env:GCM_INTERACTIVE
+    $env:GIT_TERMINAL_PROMPT = "0"
+    $env:GCM_INTERACTIVE = "never"
+
+    try {
+        $credInput = "protocol=https`nhost=$HostName`n`n"
+        $credOut = $credInput | & git credential fill 2>$null
+        foreach ($line in $credOut) {
+            if ($line -match "^password=(.+)$") {
+                return [PSCustomObject]@{ Token = $Matches[1].Trim(); Source = "CredentialManager" }
+            }
+        }
+    }
+    catch { }
+    finally {
+        $env:GIT_TERMINAL_PROMPT = $prevTerm
+        $env:GCM_INTERACTIVE = $prevGcm
+    }
+
+    if ($ProviderName -eq "gh" -and $env:GITHUB_TOKEN) {
+        return [PSCustomObject]@{ Token = $env:GITHUB_TOKEN; Source = "GITHUB_TOKEN" }
+    }
+    if ($ProviderName -eq "glab" -and $env:GITLAB_TOKEN) {
+        return [PSCustomObject]@{ Token = $env:GITLAB_TOKEN; Source = "GITLAB_TOKEN" }
+    }
+
+    return $null
+}
+
 $repoMap = Find-GitRepoMap -RootPath $Path -MaxDepth $Depth
 $filterSet = @($Services | ForEach-Object { $_.Trim().ToLowerInvariant() } | Where-Object { $_ })
 
@@ -218,12 +270,16 @@ foreach ($item in $plan) {
         continue
     }
 
-    if ($prov -eq "gh" -and -not $hasGh) {
-        $results.Add([PSCustomObject]@{ Service = $item.Service; Provider = "gh"; Source = $src; NewBranch = $targetNewBranch; LocalSwitch = "-"; Url = "-"; Status = "Error: gh CLI not installed" })
-        continue
+    $remoteInfo = Parse-RemoteInfo -RepoPath $repoPath
+    $hasCli = (($prov -eq "gh" -and $hasGh) -or ($prov -eq "glab" -and $hasGlab))
+    $apiCred = $null
+    if (-not $hasCli -and $remoteInfo) {
+        $apiCred = Get-ApiToken -HostName $remoteInfo.Host -ProviderName $prov
     }
-    if ($prov -eq "glab" -and -not $hasGlab) {
-        $results.Add([PSCustomObject]@{ Service = $item.Service; Provider = "glab"; Source = $src; NewBranch = $targetNewBranch; LocalSwitch = "-"; Url = "-"; Status = "Error: glab CLI not installed" })
+
+    if (-not $hasCli -and -not $apiCred) {
+        $hint = if ($prov -eq "gh") { "gh CLI, CredentialManager, or GITHUB_TOKEN" } else { "glab CLI, CredentialManager, or GITLAB_TOKEN" }
+        $results.Add([PSCustomObject]@{ Service = $item.Service; Provider = $prov; Source = $src; NewBranch = $targetNewBranch; LocalSwitch = "-"; Url = "-"; Status = "Error: no auth ($hint)" })
         continue
     }
 
@@ -231,8 +287,9 @@ foreach ($item in $plan) {
     $isClean = [string]::IsNullOrWhiteSpace($dirty)
 
     if ($DryRun) {
+        $authLabel = if ($hasCli) { "$prov CLI" } else { "$prov API ($($apiCred.Source))" }
         $swNote = if ($NoSwitch) { "NoSwitch" } elseif ($isClean) { "Would switch" } else { "Skip (dirty)" }
-        $prNote = if ($prov -eq "gh" -and -not $AllowEmptyCommit) { "Would create branch (PR needs commit)" } else { "Would create branch + MR/PR" }
+        $prNote = if ($prov -eq "gh" -and -not $AllowEmptyCommit) { "Would create branch [$authLabel] (PR needs commit)" } else { "Would create branch + MR/PR [$authLabel]" }
         $results.Add([PSCustomObject]@{ Service = $item.Service; Provider = $prov; Source = $src; NewBranch = $targetNewBranch; LocalSwitch = $swNote; Url = "-"; Status = $prNote })
         continue
     }
@@ -246,26 +303,50 @@ foreach ($item in $plan) {
     $ErrorActionPreference = "Continue"
     try {
         if ($prov -eq "glab") {
-            # Create remote branch Y from X via GitLab API (no empty commit needed)
-            $apiOut = & glab api "projects/:fullpath/repository/branches" -X POST -f "branch=$targetNewBranch" -f "ref=$src" 2>&1
-            if ($LASTEXITCODE -ne 0) {
-                $err = (($apiOut | ForEach-Object { "$_" }) -join " ") -replace "\r?\n", " "
-                if ($err -notmatch "already exists") {
-                    throw "Branch create failed: $err"
+            if ($hasCli) {
+                $apiOut = & glab api "projects/:fullpath/repository/branches" -X POST -f "branch=$targetNewBranch" -f "ref=$src" 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    $err = (($apiOut | ForEach-Object { "$_" }) -join " ") -replace "\r?\n", " "
+                    if ($err -notmatch "already exists") {
+                        throw "Branch create failed: $err"
+                    }
+                }
+
+                $mrArgs = @("mr", "create", "--source-branch", $targetNewBranch, "--target-branch", $mrTarget, "--title", $mrTitle, "--yes")
+                if ($Description) { $mrArgs += @("--description", $Description) }
+                if (-not $NoDraft) { $mrArgs += "--draft" }
+
+                $mrOut = & glab @mrArgs 2>&1
+                $mrText = (($mrOut | ForEach-Object { "$_" }) -join "`n").Trim()
+                if ($LASTEXITCODE -ne 0) {
+                    throw "MR create failed: $($mrText -replace '\r?\n', ' ')"
+                }
+                if ($mrText -match "(https?://\S+)") {
+                    $mrUrl = $Matches[1]
                 }
             }
+            else {
+                $encodedProj = [uri]::EscapeDataString($remoteInfo.ProjectPath)
+                $headers = @{ "PRIVATE-TOKEN" = $apiCred.Token }
+                $branchUri = "https://$($remoteInfo.Host)/api/v4/projects/$encodedProj/repository/branches"
+                try {
+                    Invoke-RestMethod -Method Post -Uri $branchUri -Headers $headers -Body @{ branch = $targetNewBranch; ref = $src } | Out-Null
+                }
+                catch {
+                    if ($_.Exception.Message -notmatch "400" -and "$_" -notmatch "already exists") {
+                        throw "GitLab API branch create failed: $($_.Exception.Message)"
+                    }
+                }
 
-            $mrArgs = @("mr", "create", "--source-branch", $targetNewBranch, "--target-branch", $mrTarget, "--title", $mrTitle, "--yes")
-            if ($Description) { $mrArgs += @("--description", $Description) }
-            if (-not $NoDraft) { $mrArgs += "--draft" }
-
-            $mrOut = & glab @mrArgs 2>&1
-            $mrText = (($mrOut | ForEach-Object { "$_" }) -join "`n").Trim()
-            if ($LASTEXITCODE -ne 0) {
-                throw "MR create failed: $($mrText -replace '\r?\n', ' ')"
-            }
-            if ($mrText -match "(https?://\S+)") {
-                $mrUrl = $Matches[1]
+                $mrUri = "https://$($remoteInfo.Host)/api/v4/projects/$encodedProj/merge_requests"
+                $mrBody = @{
+                    source_branch = $targetNewBranch
+                    target_branch = $mrTarget
+                    title         = $mrTitle
+                    description   = $Description
+                } | ConvertTo-Json -Depth 3
+                $mrResp = Invoke-RestMethod -Method Post -Uri $mrUri -Headers $headers -ContentType "application/json" -Body $mrBody
+                if ($mrResp.web_url) { $mrUrl = $mrResp.web_url }
             }
 
             if (-not $NoSwitch) {
@@ -306,16 +387,36 @@ foreach ($item in $plan) {
                 if ($LASTEXITCODE -ne 0) { throw "Failed to push $targetNewBranch" }
                 $localSwitchStatus = if ($NoSwitch) { "Created & pushed" } else { "Switched" }
 
-                $prArgs = @("pr", "create", "--base", $mrTarget, "--head", $targetNewBranch, "--title", $mrTitle, "--body", $(if ($Description) { $Description } else { "Automated draft PR" }))
-                if (-not $NoDraft) { $prArgs += "--draft" }
+                if ($hasCli) {
+                    $prArgs = @("pr", "create", "--base", $mrTarget, "--head", $targetNewBranch, "--title", $mrTitle, "--body", $(if ($Description) { $Description } else { "Automated draft PR" }))
+                    if (-not $NoDraft) { $prArgs += "--draft" }
 
-                $prOut = & gh @prArgs 2>&1
-                $prText = (($prOut | ForEach-Object { "$_" }) -join "`n").Trim()
-                if ($LASTEXITCODE -ne 0) {
-                    throw "PR create failed: $($prText -replace '\r?\n', ' ')"
+                    $prOut = & gh @prArgs 2>&1
+                    $prText = (($prOut | ForEach-Object { "$_" }) -join "`n").Trim()
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "PR create failed: $($prText -replace '\r?\n', ' ')"
+                    }
+                    if ($prText -match "(https?://\S+)") {
+                        $mrUrl = $Matches[1]
+                    }
                 }
-                if ($prText -match "(https?://\S+)") {
-                    $mrUrl = $Matches[1]
+                else {
+                    $ghApiHost = if ($remoteInfo.Host -eq "github.com") { "api.github.com" } else { "$($remoteInfo.Host)/api/v3" }
+                    $prUri = "https://$ghApiHost/repos/$($remoteInfo.ProjectPath)/pulls"
+                    $headers = @{
+                        Authorization = "Bearer $($apiCred.Token)"
+                        Accept        = "application/vnd.github+json"
+                        "User-Agent"  = "edro-git-bulk-branch-mr"
+                    }
+                    $prBody = @{
+                        title = $mrTitle
+                        head  = $targetNewBranch
+                        base  = $mrTarget
+                        body  = $(if ($Description) { $Description } else { "Automated draft PR" })
+                        draft = (-not $NoDraft)
+                    } | ConvertTo-Json -Depth 3
+                    $prResp = Invoke-RestMethod -Method Post -Uri $prUri -Headers $headers -ContentType "application/json" -Body $prBody
+                    if ($prResp.html_url) { $mrUrl = $prResp.html_url }
                 }
             }
             else {

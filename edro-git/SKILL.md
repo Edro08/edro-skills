@@ -113,7 +113,7 @@ To create a new branch `Y` from an origin branch `X` (defaulting to `Current` in
   ```powershell
   powershell -NoProfile -ExecutionPolicy Bypass -File "<path-to-this-skill>/scripts/bulk-branch-mr.ps1" -Path "." -ReportFile "branches-report.md" -NewBranch "fix/go-vulns" -DryRun
   ```
-- Auto-detects `glab` (GitLab, no empty commit needed) vs `gh` (GitHub, pass `-AllowEmptyCommit` if opening Draft PR immediately).
+- Auto-detects `glab` (GitLab, no empty commit needed) vs `gh` (GitHub, pass `-AllowEmptyCommit` if opening Draft PR immediately). Falls back to REST API using Windows Credential Manager (`git credential fill`) or `GITLAB_TOKEN` / `GITHUB_TOKEN` when `glab`/`gh` CLIs are not installed.
 - Flags: `-FromMain`, `-SourceBranch <X>`, `-TargetBranch <branch>`, `-Provider auto|gh|glab`, `-Services svc-1,svc-2`, `-NoDraft`, `-NoSwitch`, `-OutFile <path.md>` (default: `bulk-mr-report.md`), `-Console`.
 
 ### Bulk Pull (`git pull --ff-only`)
